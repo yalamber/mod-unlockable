@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useState,
   useEffect,
   createContext,
@@ -58,17 +59,107 @@ export function AppWrapper({ children }: AppWrapperProps) {
 
   const [state, dispatch] = useReducer(AppReducer, initialState);
 
-  const showMessageHelper = async (
-    text: string,
-    type: string,
-    duration = 2700
-  ) => {
-    setShowMessage(true);
-    setMessageData({ text, type, duration });
-    setTimeout(() => {
-      setShowMessage(false);
-    }, 1000 + duration);
-  };
+  const showMessageHelper = useCallback(
+    async (text: string, type: string, duration = 2700) => {
+      setShowMessage(true);
+      setMessageData({ text, type, duration });
+      setTimeout(() => {
+        setShowMessage(false);
+      }, 1000 + duration);
+    },
+    []
+  );
+
+  const onDisconnectHandler = useCallback(async () => {
+    setUserAddress(null);
+    setChainId(null);
+    setProvider(null);
+    setIsConnected(false);
+    if (web3Modal) {
+      web3Modal.clearCachedProvider();
+    }
+    dispatch({
+      type: 'SET_CONNECTED',
+      value: false,
+    });
+  }, [web3Modal]);
+
+  const switchNetwork = useCallback(async () => {
+    try {
+      await windowEth.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: process.env.REACT_APP_CHAIN_ID }],
+      });
+    } catch (switchError: any) {
+      // This error code indicates that the chain has not been added to MetaMask.
+      if (switchError?.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: process.env.REACT_APP_CHAIN_ID,
+                chainName: process.env.REACT_APP_NETWORK_NAME,
+                rpcUrls: [process.env.REACT_APP_RPC_URL],
+              },
+            ],
+          });
+        } catch (addError) {
+          showMessageHelper('Switching Network Failed!', 'warning');
+          console.log('addError:', addError);
+        }
+      } else {
+        showMessageHelper('Switching Network Failed!', 'warning');
+        console.log(switchError);
+      }
+    }
+  }, [windowEth, showMessageHelper]);
+
+  const onConnectHandler = useCallback(async () => {
+    try {
+      const instance = await web3Modal?.connect();
+      const provider = new ethers.providers.Web3Provider(instance);
+      const { chainId } = await provider.getNetwork();
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+
+      setUserAddress(address);
+      setChainId(chainId);
+      setProvider(provider);
+      setSigner(signer);
+      setIsConnected(true);
+      dispatch({
+        type: 'SET_CONNECTED',
+        value: true,
+      });
+      provider.on('accountsChanged', (newAccounts: string[]) => {
+        console.log('accounts changed', newAccounts);
+        if (Array.isArray(newAccounts) && newAccounts.length) {
+          setUserAddress(newAccounts[0]);
+        } else if (newAccounts?.length === 0) {
+          onDisconnectHandler();
+        }
+      });
+      provider.on('chainChanged', (chainId: string) => {
+        setChainId(parseInt(chainId));
+      });
+      if (chainId !== parseInt(process.env.REACT_APP_CHAIN_ID!)) {
+        switchNetwork();
+      }
+    } catch (error) {
+      let errorMessage = 'Something went wrong';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      if (!errorMessage) return null;
+      errorMessage = errorMessage.toLowerCase();
+      if (errorMessage.includes('user rejected')) {
+        showMessageHelper('Wallet connection was cancelled!', 'warning');
+      } else {
+        showMessageHelper(errorMessage, 'warning');
+      }
+    }
+  }, [switchNetwork, onDisconnectHandler, showMessageHelper, web3Modal]);
 
   useEffect(() => {
     const initWeb3Modal = async () => {
@@ -103,13 +194,32 @@ export function AppWrapper({ children }: AppWrapperProps) {
           type: 'INIT_STORED',
           value: storedState,
         });
+        if (storedState?.isConnected) {
+          setIsConnected(storedState.isConnected);
+        }
       } catch (e) {
         console.log('Unable to parse stored state', e);
         localStorage.removeItem('APP_STATE');
       }
     }
     initWeb3Modal();
-  }, [web3Modal]);
+  }, []);
+
+  useEffect(() => {
+    if (web3Modal === undefined) return;
+    if (typeof window.ethereum !== 'undefined') {
+      if (isConnected) {
+        onConnectHandler();
+      }
+    }
+  }, [web3Modal, isConnected, onConnectHandler]);
+
+  useEffect(() => {
+    // TODO deep compare states
+    if (state !== initialState) {
+      localStorage.setItem('APP_STATE', JSON.stringify(state));
+    }
+  }, [state]);
 
   useEffect(() => {
     // OnLoad: Check if proper network is selected
@@ -130,94 +240,9 @@ export function AppWrapper({ children }: AppWrapperProps) {
     } else {
       showMessageHelper('Please consider installing Metamask.', 'warning');
     }
-  }, [windowEth]);
+  }, [windowEth, showMessageHelper]);
 
   const contextValue = useMemo(() => {
-    const onConnectHandler = async () => {
-      try {
-        const instance = await web3Modal?.connect();
-        const provider = new ethers.providers.Web3Provider(instance);
-        const { chainId } = await provider.getNetwork();
-        const signer = provider.getSigner();
-        const address = await signer.getAddress();
-
-        setUserAddress(address);
-        setChainId(chainId);
-        setProvider(provider);
-        setSigner(signer);
-        setIsConnected(true);
-        provider.on('accountsChanged', (newAccounts: string[]) => {
-          console.log('accounts changed', newAccounts);
-          if (Array.isArray(newAccounts) && newAccounts.length) {
-            setUserAddress(newAccounts[0]);
-          } else if (newAccounts?.length === 0) {
-            onDisconnectHandler();
-          }
-        });
-        provider.on('chainChanged', (chainId: string) => {
-          setChainId(parseInt(chainId));
-        });
-        if (chainId !== parseInt(process.env.REACT_APP_CHAIN_ID!)) {
-          switchNetwork();
-        }
-      } catch (error) {
-        let errorMessage = 'Something went wrong';
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-        if (!errorMessage) return null;
-        errorMessage = errorMessage.toLowerCase();
-        if (errorMessage.includes('user rejected')) {
-          showMessageHelper('Wallet connection was cancelled!', 'warning');
-        } else {
-          showMessageHelper(errorMessage, 'warning');
-        }
-      }
-    };
-
-    const onDisconnectHandler = async () => {
-      setUserAddress(null);
-      setChainId(null);
-      setProvider(null);
-      setIsConnected(false);
-      if (web3Modal) {
-        web3Modal.clearCachedProvider();
-      }
-    };
-
-    const switchNetwork = async () => {
-      if (provider) {
-        try {
-          await windowEth.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: process.env.REACT_APP_CHAIN_ID }],
-          });
-        } catch (switchError: any) {
-          // This error code indicates that the chain has not been added to MetaMask.
-          if (switchError?.code === 4902) {
-            try {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [
-                  {
-                    chainId: process.env.REACT_APP_CHAIN_ID,
-                    chainName: process.env.REACT_APP_NETWORK_NAME,
-                    rpcUrls: [process.env.REACT_APP_RPC_URL],
-                  },
-                ],
-              });
-            } catch (addError) {
-              showMessageHelper('Switching Network Failed!', 'warning');
-              console.log('addError:', addError);
-            }
-          } else {
-            showMessageHelper('Switching Network Failed!', 'warning');
-            console.log(switchError);
-          }
-        }
-      }
-    };
-
     return {
       state,
       dispatch,
@@ -242,8 +267,10 @@ export function AppWrapper({ children }: AppWrapperProps) {
     userAddress,
     provider,
     signer,
-    windowEth,
     web3Modal,
+    onConnectHandler,
+    onDisconnectHandler,
+    switchNetwork,
   ]);
 
   return (

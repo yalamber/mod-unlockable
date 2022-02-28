@@ -18,7 +18,31 @@ export default function Items() {
       walletAddress={address}
       disconnect={ethersProvider?.disconnect}
     >
-      <header className="masthead text-center">Your Collections</header>
+      <div className="container">
+        <header className="masthead text-center">Your Collections</header>
+        <table className="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Desciption</th>
+              <th>Category</th>
+              <th>Compatibility</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </Layout>
   );
 }

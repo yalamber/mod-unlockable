@@ -31,9 +31,9 @@ function MainLayout({
         </div>
       </nav>
       {children}
-      <footer className="py-5 bg-black">
+      <footer className="py-5">
         <div className="container px-5">
-          <p className="m-0 text-center text-white small">
+          <p className="m-0 text-center small">
             Copyright &copy; Mint On Demand
           </p>
         </div>
