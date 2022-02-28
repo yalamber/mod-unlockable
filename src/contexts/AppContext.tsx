@@ -24,21 +24,32 @@ const providerOptions = {
 const web3Modal = new Web3Modal({ providerOptions });
 
 interface ContextType {
-  state: {
-    loading: boolean;
-  };
+  state: any;
   ethers: any;
-  web3Modal: any;
-  ethersProvider: any;
+  web3Modal: Web3Modal | null;
+  ethersProvider?: {
+    connect: () => void;
+    disconnect: () => void;
+  };
   dispatch: any; // see if we can use React.Dispatch<{ type: string; value: unknown }>
+  address: string | null;
+  chainId: number | null;
+  provider: providers.Web3Provider | null;
+  signer: providers.JsonRpcSigner | null;
+  isConnected: boolean;
+  switchNetwork?: () => void;
 }
 
-const AppContext = createContext<ContextType | null>({
+const AppContext = createContext<ContextType>({
   state: initialState,
   ethers: null,
   web3Modal: null,
-  ethersProvider: null,
   dispatch: null,
+  address: null,
+  chainId: null,
+  provider: null,
+  signer: null,
+  isConnected: false,
 });
 
 interface AppWrapperProps {
@@ -70,13 +81,13 @@ export function AppWrapper({ children }: AppWrapperProps) {
   };
 
   useEffect(() => {
-    // OnLoad: Check if Ethereum network is selected
+    // OnLoad: Check if proper network is selected
     if (windowEth) {
       (async () => {
         try {
           await windowEth.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x1' }],
+            params: [{ chainId: process.env.REACT_APP_CHAIN_ID }],
           });
         } catch (e) {
           showMessageHelper(
@@ -149,9 +160,42 @@ export function AppWrapper({ children }: AppWrapperProps) {
       setProvider(null);
       setIsConnected(false);
     };
+    const switchNetwork = async () => {
+      if (provider) {
+        try {
+          await windowEth.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: process.env.REACT_APP_CHAIN_ID }],
+          });
+        } catch (switchError: any) {
+          // This error code indicates that the chain has not been added to MetaMask.
+          if (switchError?.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [
+                  {
+                    chainId: process.env.REACT_APP_CHAIN_ID,
+                    chainName: process.env.REACT_APP_NETWORK_NAME,
+                    rpcUrls: [process.env.REACT_APP_RPC_URL],
+                  },
+                ],
+              });
+            } catch (addError) {
+              showMessageHelper('Switching Network Failed!', 'warning');
+              console.log('addError:', addError);
+            }
+          } else {
+            showMessageHelper('Switching Network Failed!', 'warning');
+            console.log(switchError);
+          }
+        }
+      }
+    };
     return {
       state,
       dispatch,
+      switchNetwork,
       ethers,
       web3Modal,
       address: userAddress,
@@ -164,7 +208,16 @@ export function AppWrapper({ children }: AppWrapperProps) {
         disconnect: onDisconnectHandler,
       },
     };
-  }, [state, dispatch, chainId, isConnected, userAddress, provider, signer]);
+  }, [
+    state,
+    dispatch,
+    chainId,
+    isConnected,
+    userAddress,
+    provider,
+    signer,
+    windowEth,
+  ]);
 
   return (
     <AppContext.Provider value={contextValue}>

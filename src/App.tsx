@@ -1,14 +1,14 @@
 import { AppWrapper } from './contexts/AppContext';
 import { Routes, Route } from 'react-router-dom';
-import { Home, About } from './page';
+import { Connect, Items } from './page';
 import './styles/main.scss';
 
 function App() {
   return (
     <AppWrapper>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="about" element={<About />} />
+        <Route path="/" element={<Connect />} />
+        <Route path="items" element={<Items />} />
       </Routes>
     </AppWrapper>
   );
