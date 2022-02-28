@@ -19,7 +19,7 @@ export default function Items() {
       disconnect={ethersProvider?.disconnect}
     >
       <div className="container">
-        <header className="masthead text-center">Your Collections</header>
+        <h1 className="text-center">Your Collections</h1>
         <table className="table">
           <thead>
             <tr>

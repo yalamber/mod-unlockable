@@ -203,7 +203,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
       }
     }
     initWeb3Modal();
-  }, []);
+  }, [web3Modal]);
 
   useEffect(() => {
     if (web3Modal === undefined) return;

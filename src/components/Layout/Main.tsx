@@ -15,7 +15,7 @@ function MainLayout({
 }: LayoutProps) {
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
+      <nav className="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div className="container px-5">
           <a className="navbar-brand" href="/">
             <img src="/logo.png" alt="MoD" width="120" />
