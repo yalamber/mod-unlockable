@@ -18,7 +18,7 @@ export default function Items() {
       walletAddress={address}
       disconnect={ethersProvider?.disconnect}
     >
-      <header className="masthead text-center"></header>
+      <header className="masthead text-center">Your Collections</header>
     </Layout>
   );
 }

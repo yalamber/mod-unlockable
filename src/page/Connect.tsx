@@ -6,14 +6,17 @@ import { useAppContext } from '../contexts/AppContext';
 export default function Home() {
   let navigate = useNavigate();
   const { isConnected, ethersProvider } = useAppContext();
+
   useEffect(() => {
     if (isConnected) {
       navigate('/items');
     }
   }, [isConnected, navigate]);
-  const connectWallet = () => {
+
+  const connectWallet = async () => {
     ethersProvider?.connect();
   };
+
   return (
     <Layout>
       <header className="masthead text-center">

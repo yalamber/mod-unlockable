@@ -7,26 +7,15 @@ import React, {
   useReducer,
 } from 'react';
 import { ethers, providers } from 'ethers';
-import Web3Modal from 'web3modal';
+import Web3Modal, { IProviderOptions } from 'web3modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { AppReducer, initialState } from './AppReducer';
 import Message, { MsgData } from '../components/ui/Message';
 
-const providerOptions = {
-  walletconnect: {
-    package: WalletConnectProvider,
-    options: {
-      infuraId: process.env.REACT_APP_INFURA_ID,
-    },
-  },
-};
-
-const web3Modal = new Web3Modal({ providerOptions });
-
 interface ContextType {
   state: any;
   ethers: any;
-  web3Modal: Web3Modal | null;
+  web3Modal: Web3Modal | null | undefined;
   ethersProvider?: {
     connect: () => void;
     disconnect: () => void;
@@ -59,6 +48,7 @@ interface AppWrapperProps {
 export function AppWrapper({ children }: AppWrapperProps) {
   const windowEth = window.ethereum;
   const [isConnected, setIsConnected] = useState(false);
+  const [web3Modal, setWeb3Modal] = useState<Web3Modal>();
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
   const [signer, setSigner] = useState<providers.JsonRpcSigner | null>(null);
@@ -81,6 +71,47 @@ export function AppWrapper({ children }: AppWrapperProps) {
   };
 
   useEffect(() => {
+    const initWeb3Modal = async () => {
+      try {
+        if (!web3Modal) {
+          const providerOptions: IProviderOptions = {
+            metamask: {
+              package: null,
+            },
+            walletconnect: {
+              package: WalletConnectProvider,
+              options: {
+                infuraId: process.env.REACT_APP_INFURA_ID,
+              },
+            },
+          };
+          const newWeb3Modal = new Web3Modal({
+            cacheProvider: true,
+            providerOptions,
+            theme: 'light',
+          });
+          setWeb3Modal(newWeb3Modal);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    if (localStorage.getItem('APP_STATE')) {
+      try {
+        const storedState = JSON.parse(localStorage.getItem('APP_STATE')!);
+        dispatch({
+          type: 'INIT_STORED',
+          value: storedState,
+        });
+      } catch (e) {
+        console.log('Unable to parse stored state', e);
+        localStorage.removeItem('APP_STATE');
+      }
+    }
+    initWeb3Modal();
+  }, [web3Modal]);
+
+  useEffect(() => {
     // OnLoad: Check if proper network is selected
     if (windowEth) {
       (async () => {
@@ -101,32 +132,10 @@ export function AppWrapper({ children }: AppWrapperProps) {
     }
   }, [windowEth]);
 
-  // if need to store state in to local storage
-  //   useEffect(() => {
-  //     if (localStorage.getItem('APP_STATE')) {
-  //       try {
-  //         const storedState = JSON.parse(
-  //           localStorage.getItem('APP_STATE') || '{}'
-  //         );
-  //         dispatch({
-  //           type: 'INIT_STORED',
-  //           value: storedState,
-  //         });
-  //       } catch (e) {
-  //         console.log('Unable to parse stored state');
-  //       }
-  //     }
-  //   }, []);
-  //   useEffect(() => {
-  //     if (state !== initialState) {
-  //       localStorage.setItem('APP_STATE', JSON.stringify(state));
-  //     }
-  //   }, [state]);
-
   const contextValue = useMemo(() => {
     const onConnectHandler = async () => {
       try {
-        const instance = await web3Modal.connect();
+        const instance = await web3Modal?.connect();
         const provider = new ethers.providers.Web3Provider(instance);
         const { chainId } = await provider.getNetwork();
         const signer = provider.getSigner();
@@ -137,8 +146,20 @@ export function AppWrapper({ children }: AppWrapperProps) {
         setProvider(provider);
         setSigner(signer);
         setIsConnected(true);
-
-        return { provider, address, chainId, signer };
+        provider.on('accountsChanged', (newAccounts: string[]) => {
+          console.log('accounts changed', newAccounts);
+          if (Array.isArray(newAccounts) && newAccounts.length) {
+            setUserAddress(newAccounts[0]);
+          } else if (newAccounts?.length === 0) {
+            onDisconnectHandler();
+          }
+        });
+        provider.on('chainChanged', (chainId: string) => {
+          setChainId(parseInt(chainId));
+        });
+        if (chainId !== parseInt(process.env.REACT_APP_CHAIN_ID!)) {
+          switchNetwork();
+        }
       } catch (error) {
         let errorMessage = 'Something went wrong';
         if (error instanceof Error) {
@@ -151,15 +172,19 @@ export function AppWrapper({ children }: AppWrapperProps) {
         } else {
           showMessageHelper(errorMessage, 'warning');
         }
-        return null;
       }
     };
+
     const onDisconnectHandler = async () => {
       setUserAddress(null);
       setChainId(null);
       setProvider(null);
       setIsConnected(false);
+      if (web3Modal) {
+        web3Modal.clearCachedProvider();
+      }
     };
+
     const switchNetwork = async () => {
       if (provider) {
         try {
@@ -192,6 +217,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
         }
       }
     };
+
     return {
       state,
       dispatch,
@@ -217,6 +243,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
     provider,
     signer,
     windowEth,
+    web3Modal,
   ]);
 
   return (

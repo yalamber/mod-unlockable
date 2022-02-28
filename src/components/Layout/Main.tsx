@@ -17,13 +17,15 @@ function MainLayout({
     <>
       <nav className="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
         <div className="container px-5">
-          <a className="navbar-brand" href="#page-top">
+          <a className="navbar-brand" href="/">
             <img src="/logo.png" alt="MoD" width="120" />
           </a>
           {isConnected && (
-            <div id="navbarResponsive" onClick={disconnect}>
-              <i className="bi bi-wallet"></i> &nbsp;
-              {walletAddress}
+            <div id="navbarResponsive">
+              <button onClick={disconnect}>
+                <i className="bi bi-wallet"></i> &nbsp;
+                {walletAddress}
+              </button>
             </div>
           )}
         </div>
