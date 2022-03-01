@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Contract } from 'ethers';
+import { useAppContext } from '../contexts/AppContext';
 import ModABI from '../data/abi/Mod3DItem.json';
 
 interface ContextType {
@@ -15,21 +16,30 @@ interface ModContractWrapperProps {
 }
 
 export function ModContractWrapper({ children }: ModContractWrapperProps) {
-  const [ModContract, setModContract] = useState(
-    new Contract(process.env.REACT_APP_NFT_CONTRACT_ADDRESS!, ModABI)
-  );
+  const { signer } = useAppContext();
 
-  const contextValue = useMemo(() => {
-    return {};
-  }, []);
+  const [ModContract, setModContract] = useState(
+    new Contract(process.env.REACT_APP_NFT_CONTRACT_ADDRESS!, ModABI.abi)
+  );
+  useEffect(() => {
+    if (!!signer) {
+      if (!ModContract.signer) {
+        setModContract(ModContract.connect(signer));
+      }
+    }
+  }, [ModContract, signer]);
 
   return (
-    <ModContractContext.Provider value={contextValue}>
+    <ModContractContext.Provider
+      value={{
+        contract: ModContract,
+      }}
+    >
       {children}
     </ModContractContext.Provider>
   );
 }
 
-export function useAppContext() {
+export function useModContractContext() {
   return useContext(ModContractContext);
 }
