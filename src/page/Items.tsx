@@ -13,8 +13,9 @@ export default function Items() {
   
   useEffect(() => {
     if (!isConnected) {
-      navigate('/');
+      return navigate('/');
     }
+    
     setItems([]);
   }, [isConnected, navigate, MoDContract]);
   return (
