@@ -86,6 +86,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
 
   const switchNetwork = useCallback(async () => {
     try {
+      console.log(`Switching to ${process.env.REACT_APP_CHAIN_ID}`);
       await windowEth.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: process.env.REACT_APP_CHAIN_ID }],
@@ -132,7 +133,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
         type: 'SET_CONNECTED',
         value: true,
       });
-      provider.on('accountsChanged', (newAccounts: string[]) => {
+      windowEth.on('accountsChanged', (newAccounts: string[]) => {
         console.log('accounts changed', newAccounts);
         if (Array.isArray(newAccounts) && newAccounts.length) {
           setUserAddress(newAccounts[0]);
@@ -140,13 +141,17 @@ export function AppWrapper({ children }: AppWrapperProps) {
           onDisconnectHandler();
         }
       });
-      provider.on('chainChanged', (chainId: string) => {
+      windowEth.on('chainChanged', (chainId: string) => {
         setChainId(parseInt(chainId));
       });
+      windowEth.on('error', (error: any) => {
+        console.log('here', error);
+      });
       if (chainId !== parseInt(process.env.REACT_APP_CHAIN_ID!)) {
-        switchNetwork();
+        await switchNetwork();
       }
     } catch (error) {
+      console.log(error);
       let errorMessage = 'Something went wrong';
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -159,7 +164,13 @@ export function AppWrapper({ children }: AppWrapperProps) {
         showMessageHelper(errorMessage, 'warning');
       }
     }
-  }, [switchNetwork, onDisconnectHandler, showMessageHelper, web3Modal]);
+  }, [
+    switchNetwork,
+    onDisconnectHandler,
+    showMessageHelper,
+    web3Modal,
+    windowEth,
+  ]);
 
   useEffect(() => {
     const initWeb3Modal = async () => {
@@ -221,26 +232,23 @@ export function AppWrapper({ children }: AppWrapperProps) {
     }
   }, [state]);
 
-  useEffect(() => {
-    // OnLoad: Check if proper network is selected
-    if (windowEth) {
-      (async () => {
-        try {
-          await windowEth.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: process.env.REACT_APP_CHAIN_ID }],
-          });
-        } catch (e) {
-          showMessageHelper(
-            'Please connect to the Ethereum network',
-            'warning'
-          );
-        }
-      })();
-    } else {
-      showMessageHelper('Please consider installing Metamask.', 'warning');
-    }
-  }, [windowEth, showMessageHelper]);
+  // useEffect(() => {
+  //   // OnLoad: Check if proper network is selected
+  //   if (windowEth) {
+  //     (async () => {
+  //       try {
+  //         await switchNetwork();
+  //       } catch (e) {
+  //         showMessageHelper(
+  //           'Please connect to the Ethereum network',
+  //           'warning'
+  //         );
+  //       }
+  //     })();
+  //   } else {
+  //     showMessageHelper('Please consider installing Metamask.', 'warning');
+  //   }
+  // }, [windowEth, showMessageHelper]);
 
   const contextValue = useMemo(() => {
     return {

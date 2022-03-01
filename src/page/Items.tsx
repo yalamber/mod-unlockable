@@ -1,17 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ListNFTs from '../components/NFTs/List';
 import Layout from '../components/Layout/Main';
 import { useAppContext } from '../contexts/AppContext';
+import { useModContractContext } from '../contexts/ModContractContext';
 
 export default function Items() {
   let navigate = useNavigate();
   const { isConnected, address, ethersProvider } = useAppContext();
+  const { MoDContract } = useModContractContext();
+  const [items, setItems] = useState<Array<any>>([]);
+  
   useEffect(() => {
     if (!isConnected) {
       navigate('/');
     }
-  }, [isConnected, navigate]);
-
+    setItems([]);
+  }, [isConnected, navigate, MoDContract]);
   return (
     <Layout
       isConnected={isConnected}
@@ -20,28 +25,7 @@ export default function Items() {
     >
       <div className="container">
         <h1 className="text-center">Your Collections</h1>
-        <table className="table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Desciption</th>
-              <th>Category</th>
-              <th>Compatibility</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
+        <ListNFTs items={items} />
       </div>
     </Layout>
   );
