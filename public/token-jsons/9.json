@@ -1,0 +1,21 @@
+{
+    "token_id": 9,
+    "level": 1,
+    "name": "MOD Jumper Top",
+    "description": "Red Jumper Top with MOD logo.",
+    "external_url": "https://www.getmod.art/",
+    "image": "https://raw.githubusercontent.com/mintondemand/design-club-beta/main/wearables/MOD%20Jumper%20Top.png",
+    "animation_url": null,
+    "item_category": "Shirt",
+    "item_compatibility": "Roblox",
+    "attributes": [
+        {
+            "trait_type": "Item Category",
+            "value": "Shirt"
+        },
+        {
+            "trait_type": "Compatibility",
+            "value": "Roblox"
+        }
+    ]
+}

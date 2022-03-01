@@ -2,6 +2,9 @@ interface ListNFTsProps {
   items: Array<any>;
 }
 export default function ListNfts({ items }: ListNFTsProps) {
+  const getUnlockableContent = (item: any) => {
+    console.log(item);
+  };
   return (
     <table className="table">
       <thead>
@@ -17,12 +20,25 @@ export default function ListNfts({ items }: ListNFTsProps) {
       <tbody>
         {items.map((item: any, index: number) => (
           <tr key={`table-item-${index}`}>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>
+              <img src={item.tokenMedata.image} alt={item.tokenMedata.name} />
+            </td>
+            <td>
+              {item.token.toString()} - {item.tokenMedata.name}
+            </td>
+            <td>{item.tokenMedata.description}</td>
+            <td>{item.tokenMedata.item_category}</td>
+            <td>{item.tokenMedata.item_compatibility}</td>
+            <td>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  getUnlockableContent(item);
+                }}
+              >
+                Download
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>
