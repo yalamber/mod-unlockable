@@ -22,10 +22,9 @@ function MainLayout({
           </a>
           {isConnected && (
             <div id="navbarResponsive">
-              <button onClick={disconnect}>
-                <i className="bi bi-wallet"></i> &nbsp;
-                {walletAddress}
-              </button>
+              <i className="bi bi-wallet"></i> &nbsp;
+              {walletAddress} &nbsp;
+              <button onClick={disconnect}>Disconnect</button>
             </div>
           )}
         </div>

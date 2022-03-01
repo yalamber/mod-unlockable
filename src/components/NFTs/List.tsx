@@ -1,9 +1,25 @@
+import { useAppContext } from '../../contexts/AppContext';
 interface ListNFTsProps {
   items: Array<any>;
 }
 export default function ListNfts({ items }: ListNFTsProps) {
-  const getUnlockableContent = (item: any) => {
-    console.log(item);
+  const { signer, address } = useAppContext();
+  const getUnlockableContent = async (item: any) => {
+    const nonce = new Date().getTime();
+    const message = `${address}-unlock-${item.token.toString()}-${nonce}`;
+    const signature = await signer?.signMessage(message);
+    // pass tokenid, signature and address to server for verification
+    const result = await fetch('/.netlify/functions/unlock', {
+      method: 'POST',
+      body: JSON.stringify({
+        signature,
+        message,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log(signature, result);
   };
   return (
     <table className="table">
@@ -36,7 +52,7 @@ export default function ListNfts({ items }: ListNFTsProps) {
                   getUnlockableContent(item);
                 }}
               >
-                Download
+                Unlock
               </button>
             </td>
           </tr>
