@@ -9,16 +9,19 @@ export default function ListNfts({ items }: ListNFTsProps) {
     const message = `${address}-unlock-${item.token.toString()}-${nonce}`;
     const signature = await signer?.signMessage(message);
     // pass tokenid, signature and address to server for verification
-    const result = await fetch('/.netlify/functions/unlock', {
-      method: 'POST',
-      body: JSON.stringify({
-        signature,
-        message,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const result = await fetch(
+      `${process.env.REACT_APP_API_BASE_URL}/api/unlock`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          signature,
+          message,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     const unlockRes = await result.json();
     console.log(signature, unlockRes);
   };

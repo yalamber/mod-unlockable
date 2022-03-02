@@ -11,6 +11,12 @@ const ModContract = new Contract(
 );
 
 const handler: Handler = async (event, context) => {
+  if (!event.body) {
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ status: 'no-body' }),
+    };
+  }
   const { message, signature } = JSON.parse(event.body);
   const signerAddress = utils.verifyMessage(message, signature);
   const messageData = message.split('-');
