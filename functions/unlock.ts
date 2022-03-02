@@ -10,9 +10,23 @@ const ModContract = new Contract(
   new providers.JsonRpcProvider(process.env.REACT_APP_RPC_URL)
 );
 
+const headers = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'Origin, X-Requested-With, Content-Type, Accept',
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Methods': '*',
+  'Access-Control-Max-Age': '2592000',
+  'Access-Control-Allow-Credentials': 'true',
+};
+
 const handler: Handler = async (event, context) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers };
+  }
   if (!event.body) {
     return {
+      headers,
       statusCode: 200,
       body: JSON.stringify({ status: 'no-body' }),
     };
@@ -25,6 +39,7 @@ const handler: Handler = async (event, context) => {
     const tokenOwner = await ModContract.ownerOf(tokenId);
     if (signerAddress === tokenOwner) {
       return {
+        headers,
         statusCode: 200,
         body: JSON.stringify({
           status: 'unlocked',
@@ -34,6 +49,7 @@ const handler: Handler = async (event, context) => {
     }
   }
   return {
+    headers,
     statusCode: 200,
     body: JSON.stringify({ status: 'unlock-fail' }),
   };
