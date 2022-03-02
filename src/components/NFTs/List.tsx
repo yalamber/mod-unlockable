@@ -4,22 +4,24 @@ interface ListNFTsProps {
 }
 export default function ListNfts({ items }: ListNFTsProps) {
   return (
-    <table className="table">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Name</th>
-          <th>Desciption</th>
-          <th>Category</th>
-          <th>Compatibility</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((item: any, index: number) => (
-          <NftRow item={item} key={`row-${index}`} />
-        ))}
-      </tbody>
-    </table>
+    <div className="table-responsive">
+      <table className="table">
+        <thead className="table-dark">
+          <tr>
+            <th scope="col"></th>
+            <th scope="col">Name</th>
+            <th scope="col">Desciption</th>
+            <th scope="col">Category</th>
+            <th scope="col">Compatibility</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item: any, index: number) => (
+            <NftRow item={item} key={`row-${index}`} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

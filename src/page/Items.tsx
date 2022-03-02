@@ -55,7 +55,7 @@ export default function Items() {
       }
     })();
   }, [isConnected, navigate, address, MoDContract]);
-  
+
   return (
     <Layout
       isConnected={isConnected}
@@ -63,9 +63,9 @@ export default function Items() {
       disconnect={ethersProvider?.disconnect}
     >
       <div className="container">
-        <h1 className="text-center">
+        <h2 className="text-center">
           Your Collections {balance > 0 && <>({balance.toString()})</>}
-        </h1>
+        </h2>
         {loading && <>Loading...</>}
         {!loading && <ListNFTs items={items} />}
       </div>
