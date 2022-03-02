@@ -19,7 +19,8 @@ export default function ListNfts({ items }: ListNFTsProps) {
         'Content-Type': 'application/json',
       },
     });
-    console.log(signature, result);
+    const unlockRes = await result.json();
+    console.log(signature, unlockRes);
   };
   return (
     <table className="table">
