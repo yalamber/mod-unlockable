@@ -9,6 +9,7 @@ export default function Items() {
   let navigate = useNavigate();
   const { isConnected, address, ethersProvider } = useAppContext();
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState(0);
   const { MoDContract } = useModContractContext();
   const [items, setItems] = useState<Array<any>>([]);
 
@@ -20,20 +21,34 @@ export default function Items() {
       try {
         if (address && MoDContract) {
           const balance = await MoDContract.balanceOf(address);
-          const tokens = [];
+          const nfts: Array<any> = [];
+          setBalance(balance);
+          setLoading(false);
           for (let i = 0; i < balance; i++) {
-            const token = await MoDContract.tokenOfOwnerByIndex(address, i);
-            const tokenURI = await MoDContract.tokenURI(token);
-            let tokenMedata = await fetch(`/token-jsons/${token}.json`);
-            tokenMedata = await tokenMedata.json();
-            tokens.push({
-              token,
-              tokenURI,
-              tokenMedata,
+            nfts.push({
+              tokenIndex: i,
+              loading: true,
+              token: '',
+              metaData: {},
             });
           }
-          setItems(tokens);
-          setLoading(false);
+          setItems(nfts);
+          // update item
+          for (let nft of nfts) {
+            const token = await MoDContract.tokenOfOwnerByIndex(
+              address,
+              nft.tokenIndex
+            );
+            let metaData = await fetch(`/token-jsons/${token}.json`);
+            metaData = await metaData.json();
+            nfts[nft.tokenIndex] = {
+              tokenIndex: nft.tokenIndex,
+              loading: false,
+              token,
+              metaData,
+            };
+            setItems([...nfts]);
+          }
         }
       } catch (e) {
         console.log(e);
@@ -47,7 +62,9 @@ export default function Items() {
       disconnect={ethersProvider?.disconnect}
     >
       <div className="container">
-        <h1 className="text-center">Your Collections</h1>
+        <h1 className="text-center">
+          Your Collections {balance > 0 && <>({balance.toString()})</>}
+        </h1>
         {loading && <>Loading...</>}
         {!loading && <ListNFTs items={items} />}
       </div>

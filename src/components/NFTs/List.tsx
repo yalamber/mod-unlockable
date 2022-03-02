@@ -37,14 +37,15 @@ export default function ListNfts({ items }: ListNFTsProps) {
         {items.map((item: any, index: number) => (
           <tr key={`table-item-${index}`}>
             <td>
-              <img src={item.tokenMedata.image} alt={item.tokenMedata.name} />
+              <img src={item.metaData.image} alt={item.metaData.name} />
             </td>
             <td>
-              {item.token.toString()} - {item.tokenMedata.name}
+              {item.loading ? 'Loading...' : ''} {item.token.toString()} -{' '}
+              {item.metaData.name}
             </td>
-            <td>{item.tokenMedata.description}</td>
-            <td>{item.tokenMedata.item_category}</td>
-            <td>{item.tokenMedata.item_compatibility}</td>
+            <td>{item.metaData.description}</td>
+            <td>{item.metaData.item_category}</td>
+            <td>{item.metaData.item_compatibility}</td>
             <td>
               <button
                 className="btn btn-primary"

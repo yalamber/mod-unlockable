@@ -11,8 +11,8 @@ const ModContract = new Contract(
 );
 
 const handler: Handler = async (event, context) => {
-  const { message, signedMessage } = JSON.parse(event.body);
-  const signerAddress = utils.verifyMessage(message, signedMessage);
+  const { message, signature } = JSON.parse(event.body);
+  const signerAddress = utils.verifyMessage(message, signature);
   const messageData = message.split('-');
   if (messageData.length >= 3) {
     const tokenId = messageData[2];
