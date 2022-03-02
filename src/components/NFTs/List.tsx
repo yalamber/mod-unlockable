@@ -41,7 +41,11 @@ export default function ListNfts({ items }: ListNFTsProps) {
         {items.map((item: any, index: number) => (
           <tr key={`table-item-${index}`}>
             <td>
-              <img src={item.metaData.image} alt={item.metaData.name} />
+              <img
+                src={item.metaData.image}
+                width="150"
+                alt={item.metaData.name}
+              />
             </td>
             <td>
               {item.loading ? 'Loading...' : ''} {item.token.toString()} -{' '}
