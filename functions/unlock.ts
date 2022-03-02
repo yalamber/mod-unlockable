@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { Contract, providers, utils } from 'ethers';
 import ModAbi from '../src/data/abi/Mod3DItem.json';
-import unlockable from '../data/unlockable.json';
+import unlockables from '../data/unlockable.json';
 
 const contractAddress = process.env.REACT_APP_MOD_CONTRACT_ADDRESS;
 
@@ -39,7 +39,7 @@ const handler: Handler = async (event, context) => {
     const tokenId = messageData[2];
     const tokenOwner = await ModContract.ownerOf(tokenId);
     if (signerAddress === tokenOwner) {
-      const unlockItem = unlockable.find((item) => item.tokenId === tokenId);
+      const unlockItem = unlockables.find((item) => item.tokenId === parseInt(tokenId));
       if (!unlockItem) {
         return {
           headers,

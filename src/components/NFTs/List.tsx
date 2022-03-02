@@ -3,7 +3,6 @@ interface ListNFTsProps {
   items: Array<any>;
 }
 export default function ListNfts({ items }: ListNFTsProps) {
-
   return (
     <table className="table">
       <thead>

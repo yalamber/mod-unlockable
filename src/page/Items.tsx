@@ -55,6 +55,7 @@ export default function Items() {
       }
     })();
   }, [isConnected, navigate, address, MoDContract]);
+  
   return (
     <Layout
       isConnected={isConnected}

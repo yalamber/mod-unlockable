@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
+// import { useModContractContext } from '../../contexts/ModContractContext';
 
 interface NFTRowProps {
   item: any;
 }
 
 function NFTRow({ item }: NFTRowProps) {
+  // const { MoDContract } = useModContractContext();
+  const { signer, address } = useAppContext();
   const [unlocking, setUnlocking] = useState(false);
   const [unlockStatus, setUnlockStatus] = useState(null);
   const [unlockedContent, setUnlockedContent] = useState(null);
-  const { signer, address } = useAppContext();
   const getUnlockableContent = async (item: any) => {
     try {
       setUnlocking(true);
@@ -41,6 +43,11 @@ function NFTRow({ item }: NFTRowProps) {
       setUnlocking(false);
     }
   };
+
+  // const sendNFT = async (item: any, to: string) => {
+  //   await MoDContract.transferFrom(address, to, item.token);
+  // };
+
   return (
     <tr>
       <td>
@@ -67,7 +74,7 @@ function NFTRow({ item }: NFTRowProps) {
         {unlocking && 'Unlocking...'}
         {unlockedContent && (
           <a href={unlockedContent} target="_blank" rel="noreferrer">
-            {unlockedContent}
+            Click for unlocked content
           </a>
         )}
         {unlockStatus && unlockStatus !== 'unlocked' && (
